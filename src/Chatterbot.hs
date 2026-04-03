@@ -1,3 +1,5 @@
+-- Pilar Frutos and Santino Pepe
+
 module Chatterbot where
 import Utilities
 import System.Random
