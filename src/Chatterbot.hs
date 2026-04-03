@@ -8,6 +8,8 @@ import Data.Maybe
 
 -- If you're not sure what this is, it's ok.
 import Control.Monad (mapM)
+import Control.Applicative (Alternative(empty))
+import System.Console.GetOpt (ArgDescr(NoArg))
 
 -- A pattern is a list of things
 -- Where we have either a value or a wildcard
