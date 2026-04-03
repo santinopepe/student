@@ -158,24 +158,84 @@ reductionsApply = undefined
 --------------------------------------------------------
 
 -- Replaces a wildcard in a template with the list given as the third argument
+
+-- >>> substitute (mkPattern 'x' "3*cos(x) + 4 - x") "5.37" == "3*cos(5.37) + 4 - 5.37"
 substitute :: Eq a => Template a -> [a] -> [a]
-{- TO BE WRITTEN -}
-substitute = undefined
+substitute (Pattern p) input = replace p input
+  where 
+    replace [] input = []
+    replace (x:xs) input =
+      case x of
+        Wildcard -> input ++ replace xs input 
+        Item y -> y : replace xs input
+
+   
 
 -- Tries to match two lists. If they match, the result consists of the sublist
 -- bound to the wildcard in the pattern list.
+--- >>> match (mkPattern 'x' "hello") ""
+-- Nothing
+--- >>> match (mkPattern 'x' "") "abc"
+-- Nothing
+--- >>> match (mkPattern '*' "frodo") "gandalf"
+-- Nothing
+--- >>> match (mkPattern 'x' "abcd") "abcd"
+-- Just ""
+
+--- >>> match (mkPattern 'x' "2*x+3") "2*7+3"
+-- Just "7"
+
+--- >>> match (mkPattern '*' "* and *") "you and me"
+-- Just "you"
+
+--- >>> match (mkPattern '*' "*do") "bdo"
+--- >>> match (mkPattern '*' "*do") "dobedo"
+--- >>> match (mkPattern '*' "*do") "bedobe"
+-- Just "b"
+-- Just "dobe"
+-- Nothing
+
 match :: Eq a => Pattern a -> [a] -> Maybe [a]
-{- TO BE WRITTEN -}
-match = undefined
+match (Pattern p) s = find p s
+  where 
+    find [] [] = Just []
+    find [] s = Nothing 
+    find p [] = Nothing 
+    find (x:xs) (y:ys) = 
+      case x of
+        Wildcard -> case singleWildcardMatch (Pattern (x:xs)) (y:ys)  of
+                    Nothing -> longerWildcardMatch (Pattern (x:xs)) (y:ys) 
+                    Just m -> Just m
+        Item z -> if z /= y 
+                  then Nothing 
+                  else find xs ys
 
 -- Helper function to match
+
+-- >>> singleWildcardMatch (mkPattern '*' "*do") "bdo"
+-- >>> singleWildcardMatch (mkPattern '*' "*do") "dobedo"
+-- >>> singleWildcardMatch (mkPattern '*' "*do") "bedobe"
+-- Just "b"
+-- Nothing
+-- Nothing
+
+--- >>> longerWildcardMatch (mkPattern '*' "*do") "bdo"
+--- >>> longerWildcardMatch (mkPattern '*' "*do") "dobedo"
+--- >>> longerWildcardMatch (mkPattern '*' "*do") "bedobe"
+-- Nothing
+-- Just "dobe"
+-- Nothing
 singleWildcardMatch, longerWildcardMatch :: Eq a => Pattern a -> [a] -> Maybe [a]
 singleWildcardMatch (Pattern (Wildcard:ps)) (x:xs) =
   case match (Pattern ps) xs of
     Nothing -> Nothing
     Just _ -> Just [x]
-{- TO BE WRITTEN -}
-longerWildcardMatch = undefined
+
+longerWildcardMatch (Pattern (Wildcard:ps)) (x:xs) = 
+  case match (Pattern (Wildcard:ps)) xs of
+    Nothing -> Nothing
+    Just zs -> Just (x:zs)
+
 
 
 
