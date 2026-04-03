@@ -108,10 +108,21 @@ ruleCompile = undefined
 
 -- We can make a pattern from a list of elements
 -- If we choose one element that represents the wildcard
--- mkPattern '*' "Hi *!" => [Item 'H', Item 'i', Wildcard, Item '!']
+-- >>> mkPattern '*' "" == Pattern []
+-- True
+-- >>> mkPattern '*' "a*b" == Pattern [Item 'a',Wildcard,Item 'b']
+-- True
+-- >>> mkPattern '*' "Hi *!" == Pattern [Item 'H', Item 'i', Item ' ', Wildcard, Item '!']
+-- True
 mkPattern :: Eq a => a -> [a] -> Pattern a
-{- TO BE WRITTEN -}
-mkPattern = undefined
+mkPattern wc s = Pattern (map toElem s)
+  where
+    toElem x = 
+      if x == wc 
+        then Wildcard 
+        else Item x
+        
+          
 
 stringToPattern :: String -> String -> Pattern String
 stringToPattern wc = mkPattern wc . words
