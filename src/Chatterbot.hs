@@ -63,9 +63,19 @@ rulesApply :: [(Pattern String, Template String)] -> Phrase -> Phrase
 {- TO BE WRITTEN -}
 rulesApply = undefined
 
+
+--- >>> reflect []
+--- >>> reflect ["i", "will", "never", "see", "my", "reflection", "in", "your", "eyes"] == ["you", "will", "never", "see", "your",  "reflection", "in", "my", "eyes"]
+-- []
+-- True
 reflect :: Phrase -> Phrase
-{- TO BE WRITTEN -}
-reflect = undefined
+reflect = concatMap reflectWords
+
+reflectWords :: String -> [String]
+reflectWords w = case lookup w reflections of
+  Just r -> words r
+  Nothing -> [w]
+
 
 reflections =
   [ ("am",     "are"),
