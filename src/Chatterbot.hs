@@ -113,8 +113,11 @@ rulesCompile :: [(String, [String])] -> BotBrain
 rulesCompile = map ruleCompile
 
 ruleCompile :: (String, [String]) -> Rule
-{- TO BE WRITTEN -}
-ruleCompile = undefined
+ruleCompile (pat, answers) =
+  Rule (compiledPattern, compiledAnswers)
+  where
+    compiledPattern = stringToPattern "*" (map toLower pat)
+    compiledAnswers = map (stringToPattern "*" . map toLower) answers
 
 --------------------------------------
 
