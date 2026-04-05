@@ -261,10 +261,13 @@ matchAndTransform transform pat = (mmap transform) . (match pat)
 
 -- Applying a single pattern
 transformationApply :: Eq a => ([a] -> [a]) -> [a] -> (Pattern a, Template a) -> Maybe [a]
-{- TO BE WRITTEN -}
-transformationApply = undefined
+transformationApply f s (p, t) = 
+  case matchAndTransform f p s of
+    Nothing -> Nothing
+    Just r -> Just (substitute t r)
 
 -- Applying a list of patterns until one succeeds
 transformationsApply :: Eq a => ([a] -> [a]) -> [(Pattern a, Template a)] -> [a] -> Maybe [a]
-{- TO BE WRITTEN -}
-transformationsApply = undefined
+transformationsApply f patterns s = foldl (orElse) Nothing [transformationApply f s (p, t) | (p, t) <- patterns]
+  where orElse Nothing y = y
+        orElse x _ = x
