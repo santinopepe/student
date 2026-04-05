@@ -60,9 +60,10 @@ makePair :: Rule -> IO (Pattern String, Template String)
 makePair = undefined
 
 rulesApply :: [(Pattern String, Template String)] -> Phrase -> Phrase
-{- TO BE WRITTEN -}
-rulesApply = undefined
-
+rulesApply rules phrase = 
+  case transformationsApply reflect rules phrase of
+    Nothing -> phrase
+    Just p  ->  p
 
 --- >>> reflect []
 --- >>> reflect ["i", "will", "never", "see", "my", "reflection", "in", "your", "eyes"] == ["you", "will", "never", "see", "your",  "reflection", "in", "my", "eyes"]
