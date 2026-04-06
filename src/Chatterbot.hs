@@ -166,9 +166,13 @@ reduce :: Phrase -> Phrase
 reduce = reductionsApply reductions
 
 reductionsApply :: [(Pattern String, Pattern String)] -> Phrase -> Phrase
-{- TO BE WRITTEN -}
-reductionsApply = undefined
-
+reductionsApply reductions = fix reduceOnce
+  where
+    reduceOnce phrase =
+      case transformationsApply id reductions phrase of
+        Nothing -> phrase
+        Just p  -> p
+      
 
 -------------------------------------------------------
 -- Match and substitute
