@@ -118,7 +118,7 @@ ruleCompile (pat, answers) =
   Rule (compiledPattern, compiledAnswers)
   where
     compiledPattern = stringToPattern "*" (map toLower pat)
-    compiledAnswers = map (stringToPattern "*" . map toLower) answers
+    compiledAnswers = map (stringToPattern "*" ) answers
 
 --------------------------------------
 
