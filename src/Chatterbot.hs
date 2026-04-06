@@ -56,8 +56,9 @@ stateOfMind b =
 -- A rule maps a pattern to many answers, so we choose one
 -- at random, and that's our bot
 makePair :: Rule -> IO (Pattern String, Template String)
-{- TO BE WRITTEN -}
-makePair = undefined
+makePair (Rule (pat, temps)) = do
+  u <- randomIO :: IO Double
+  return (pat, pick u temps)
 
 rulesApply :: [(Pattern String, Template String)] -> Phrase -> Phrase
 rulesApply rules phrase = 
