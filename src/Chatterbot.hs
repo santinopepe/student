@@ -7,7 +7,7 @@ import Data.Char
 import Data.Maybe
 
 -- If you're not sure what this is, it's ok.
-import Control.Monad (mapM)
+import Control.Monad (mapM, unless)
 import Control.Applicative (Alternative(empty))
 import System.Console.GetOpt (ArgDescr(NoArg))
 
@@ -42,7 +42,7 @@ chatterbot botName botRules = do
       question <- getLine
       answer <- stateOfMind brain
       putStrLn (botName ++ ": " ++ (present . answer . prepare) question)
-      if (not . endOfDialog) question then botloop else return ()
+      unless (endOfDialog question) botloop -- Changes suggested by HLint
 
 
 --------------------------------------------------------
@@ -61,10 +61,8 @@ makePair (Rule (pat, temps)) = do
   return (pat, pick u temps)
 
 rulesApply :: [(Pattern String, Template String)] -> Phrase -> Phrase
-rulesApply rules phrase = 
-  case transformationsApply reflect rules phrase of
-    Nothing -> phrase
-    Just p  ->  p
+rulesApply rules phrase =
+  fromMaybe phrase (transformationsApply reflect rules phrase) -- Changes suggested by HLint prevously we used case. 
 
 --- >>> reflect []
 --- >>> reflect ["i", "will", "never", "see", "my", "reflection", "in", "your", "eyes"] == ["you", "will", "never", "see", "your",  "reflection", "in", "my", "eyes"]
@@ -74,9 +72,7 @@ reflect :: Phrase -> Phrase
 reflect = concatMap reflectWords
 
 reflectWords :: String -> [String]
-reflectWords w = case lookup w reflections of
-  Just r -> words r
-  Nothing -> [w]
+reflectWords w = maybe [w] words (lookup w reflections) -- Changes suggested by HLint prevously we used case.
 
 
 reflections =
@@ -134,12 +130,12 @@ ruleCompile (pat, answers) =
 mkPattern :: Eq a => a -> [a] -> Pattern a
 mkPattern wc s = Pattern (map toElem s)
   where
-    toElem x = 
-      if x == wc 
-        then Wildcard 
+    toElem x =
+      if x == wc
+        then Wildcard
         else Item x
-        
-          
+
+
 
 stringToPattern :: String -> String -> Pattern String
 stringToPattern wc = mkPattern wc . words
@@ -168,11 +164,8 @@ reduce = reductionsApply reductions
 reductionsApply :: [(Pattern String, Pattern String)] -> Phrase -> Phrase
 reductionsApply reductions = fix reduceOnce
   where
-    reduceOnce phrase =
-      case transformationsApply id reductions phrase of
-        Nothing -> phrase
-        Just p  -> p
-      
+    reduceOnce phrase = fromMaybe phrase (transformationsApply id reductions phrase) -- Changes suggested by HLint prevously we used case.
+
 
 -------------------------------------------------------
 -- Match and substitute
@@ -183,14 +176,14 @@ reductionsApply reductions = fix reduceOnce
 -- >>> substitute (mkPattern 'x' "3*cos(x) + 4 - x") "5.37" == "3*cos(5.37) + 4 - 5.37"
 substitute :: Eq a => Template a -> [a] -> [a]
 substitute (Pattern p) input = replace p input
-  where 
+  where
     replace [] input = []
     replace (x:xs) input =
       case x of
-        Wildcard -> input ++ replace xs input 
+        Wildcard -> input ++ replace xs input
         Item y -> y : replace xs input
 
-   
+
 
 -- Tries to match two lists. If they match, the result consists of the sublist
 -- bound to the wildcard in the pattern list.
@@ -217,18 +210,18 @@ substitute (Pattern p) input = replace p input
 -- Nothing
 
 match :: Eq a => Pattern a -> [a] -> Maybe [a]
-match (Pattern p) s = find p s
-  where 
+match (Pattern p) = find p
+  where
     find [] [] = Just []
-    find [] s = Nothing 
-    find p [] = Nothing 
-    find (x:xs) (y:ys) = 
+    find [] s = Nothing
+    find p [] = Nothing
+    find (x:xs) (y:ys) =
       case x of
         Wildcard -> case singleWildcardMatch (Pattern (x:xs)) (y:ys)  of
-                    Nothing -> longerWildcardMatch (Pattern (x:xs)) (y:ys) 
+                    Nothing -> longerWildcardMatch (Pattern (x:xs)) (y:ys)
                     Just m -> Just m
-        Item z -> if z /= y 
-                  then Nothing 
+        Item z -> if z /= y
+                  then Nothing
                   else find xs ys
 
 -- Helper function to match
@@ -252,7 +245,7 @@ singleWildcardMatch (Pattern (Wildcard:ps)) (x:xs) =
     Nothing -> Nothing
     Just _ -> Just [x]
 
-longerWildcardMatch (Pattern (Wildcard:ps)) (x:xs) = 
+longerWildcardMatch (Pattern (Wildcard:ps)) (x:xs) =
   case match (Pattern (Wildcard:ps)) xs of
     Nothing -> Nothing
     Just zs -> Just (x:zs)
@@ -266,17 +259,17 @@ longerWildcardMatch (Pattern (Wildcard:ps)) (x:xs) =
 
 -- Helper function: Matches a pattern and applies the transformation
 matchAndTransform :: Eq a => ([a] -> [a]) -> Pattern a -> [a] -> Maybe [a]
-matchAndTransform transform pat = (mmap transform) . (match pat)
+matchAndTransform transform pat = mmap transform . match pat
 
 -- Applying a single pattern
 transformationApply :: Eq a => ([a] -> [a]) -> [a] -> (Pattern a, Template a) -> Maybe [a]
-transformationApply f s (p, t) = 
+transformationApply f s (p, t) =
   case matchAndTransform f p s of
     Nothing -> Nothing
     Just r -> Just (substitute t r)
 
 -- Applying a list of patterns until one succeeds
 transformationsApply :: Eq a => ([a] -> [a]) -> [(Pattern a, Template a)] -> [a] -> Maybe [a]
-transformationsApply f patterns s = foldl (orElse) Nothing [transformationApply f s (p, t) | (p, t) <- patterns]
+transformationsApply f patterns s = foldl orElse Nothing [transformationApply f s (p, t) | (p, t) <- patterns]
   where orElse Nothing y = y
         orElse x _ = x
